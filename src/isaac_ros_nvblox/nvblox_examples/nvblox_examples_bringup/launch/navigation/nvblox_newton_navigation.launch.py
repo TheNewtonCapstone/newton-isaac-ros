@@ -24,7 +24,7 @@ from nvblox_ros_python_utils.nvblox_launch_utils import NvbloxMode
 from nvblox_ros_python_utils.nvblox_constants import NVBLOX_CONTAINER_NAME
 
 
-def add_nvblox_carter_navigation(args: lu.ArgumentContainer) -> List[lut.Action]:
+def add_nvblox_newton_navigation(args: lu.ArgumentContainer) -> List[lut.Action]:
     # Nav2 base parameter file
     actions = []
     nav_params_path = lu.get_path('nvblox_examples_bringup', 'config/navigation/newton_nav2.yaml')
@@ -88,5 +88,5 @@ def generate_launch_description() -> lut.LaunchDescription:
     args.add_arg('mode')
     args.add_arg('container_name', NVBLOX_CONTAINER_NAME)
 
-    args.add_opaque_function(add_nvblox_carter_navigation)
+    args.add_opaque_function(add_nvblox_newton_navigation)
     return lut.LaunchDescription(args.get_launch_actions())

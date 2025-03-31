@@ -13,9 +13,9 @@
       esdf_slice_height: 0.0
       # Expected to be tuned by users. Slice height depends on realsense mounting.
       esdf_slice_min_height: -0.1
-      esdf_slice_max_height: 0.3
+      esdf_slice_max_height: 0.4
 
     dynamic_mapper:
       esdf_slice_height: 0.0
       esdf_slice_min_height: -0.1
-      esdf_slice_max_height: 0.3
+      esdf_slice_max_height: 0.4

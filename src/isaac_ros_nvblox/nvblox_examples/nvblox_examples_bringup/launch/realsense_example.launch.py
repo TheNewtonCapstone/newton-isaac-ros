@@ -48,15 +48,6 @@ def generate_launch_description() -> LaunchDescription:
         description='The nvblox mode.',
         cli=True)
     args.add_arg(
-        'people_segmentation',
-        default=NvbloxPeopleSegmentation.peoplesemsegnet_vanilla,
-        choices=[
-            str(NvbloxPeopleSegmentation.peoplesemsegnet_vanilla),
-            str(NvbloxPeopleSegmentation.peoplesemsegnet_shuffleseg)
-        ],
-        description='The  model type of PeopleSemSegNet (only used when mode:=people_segmentation).',
-        cli=True)
-    args.add_arg(
         'attach_to_container',
         'False',
         description='Add components to an existing component container.',
@@ -70,14 +61,9 @@ def generate_launch_description() -> LaunchDescription:
         'True',
         description='Launch Realsense drivers')
     args.add_arg(
-        'use_foxglove_whitelist',
-        True,
-        description='Disable visualization of bandwidth-heavy topics',
-        cli=True)
-    args.add_arg(
         'navigation',
         True,
-        description='Whether to enable nav2 for navigation in Isaac Sim.',
+        description='Whether to enable nav2 for navigation.',
         cli=True)
     actions = args.get_launch_actions()
 
@@ -111,6 +97,7 @@ def generate_launch_description() -> LaunchDescription:
 
     run_rs_driver = UnlessCondition(
         OrSubstitution(lu.is_valid(args.rosbag), lu.is_false(args.run_realsense)))
+    
     # Realsense
     actions.append(
         lu.include(
@@ -135,51 +122,6 @@ def generate_launch_description() -> LaunchDescription:
             # Delay for 1 second to make sure that the static topics from the rosbag are published.
             delay=1.0,
         ))
-    # People detection for multi-RS
-    # camera_namespaces = ['camera0', 'camera1', 'camera2', 'camera3']
-    # camera_input_topics = []
-    # input_camera_info_topics= []
-    # output_resized_image_topics = []
-    # output_resized_camera_info_topics = []
-    # for ns in camera_namespaces:
-    #     camera_input_topics.append(f'/{ns}/color/image_raw')
-    #     input_camera_info_topics.append(f'/{ns}/color/camera_info')
-    #     output_resized_image_topics.append(f'/{ns}/segmentation/image_resized')
-    #     output_resized_camera_info_topics.append(f'/{ns}/segmentation/camera_info_resized')
-
-    # People segmentation
-    # actions.append(
-    #     lu.include(
-    #         'nvblox_examples_bringup',
-    #         'launch/perception/segmentation.launch.py',
-    #         launch_arguments={
-    #             'container_name': args.container_name,
-    #             'people_segmentation': args.people_segmentation,
-    #             'namespace_list': camera_namespaces,
-    #             'input_topic_list': camera_input_topics,
-    #             'input_camera_info_topic_list': input_camera_info_topics,
-    #             'output_resized_image_topic_list': output_resized_image_topics,
-    #             'output_resized_camera_info_topic_list': output_resized_camera_info_topics,
-    #             'num_cameras': args.num_cameras,
-    #             # fixing rosbag replay dropping fps
-    #             'one_container_per_camera': True
-    #         },
-    #         condition=IfCondition(lu.has_substring(args.mode, NvbloxMode.people_segmentation))))
-
-    # People detection
-    # actions.append(
-    #     lu.include(
-    #         'nvblox_examples_bringup',
-    #         'launch/perception/detection.launch.py',
-    #         launch_arguments={
-    #             'namespace_list': camera_namespaces,
-    #             'input_topic_list': camera_input_topics,
-    #             'num_cameras': args.num_cameras,
-    #             'container_name': args.container_name,
-    #             # fixing rosbag replay dropping fps
-    #             'one_container_per_camera': True
-    #         },
-    #         condition=IfCondition(lu.has_substring(args.mode, NvbloxMode.people_detection))))
 
     # Nvblox
     actions.append(
@@ -191,7 +133,8 @@ def generate_launch_description() -> LaunchDescription:
                 'mode': args.mode,
                 'camera': camera_mode,
                 'num_cameras': args.num_cameras,
-            }))
+            },
+        ))
     
     # EKF node for mashing IMU and vSLAM
     actions.append(
@@ -226,7 +169,7 @@ def generate_launch_description() -> LaunchDescription:
                 'imu0': '/imu_data',
                 'imu0_config': [False, False, False,  # x, y, z position
                                True, True, True,      # roll, pitch, yaw
-                               True, True, True,   # x, y, z velocity
+                               False, False, False,   # x, y, z velocity (current IMU does not have any)
                                True, True, True,      # roll, pitch, yaw velocity
                                True, True, True],     # x, y, z acceleration
                 'imu0_queue_size': 10,
@@ -253,18 +196,7 @@ def generate_launch_description() -> LaunchDescription:
             bag_path=args.rosbag,
             additional_bag_play_args=args.rosbag_args,
             condition=IfCondition(lu.is_valid(args.rosbag))))
-
-    # Visualization
-    # actions.append(
-    #     lu.include(
-    #         'nvblox_examples_bringup',
-    #         'launch/visualization/visualization.launch.py',
-    #         launch_arguments={
-    #             'mode': args.mode,
-    #             'camera': camera_mode,
-    #             'use_foxglove_whitelist': args.use_foxglove_whitelist,
-    #         }))
-
+ 
     # Container
     # NOTE: By default (attach_to_container:=False) we launch a container which all nodes are
     # added to, however, we expose the option to not launch a container, and instead attach to
